@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid UML Diagrams</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <h1>Mermaid UML Diagrams Examples</h1>
+
+    <h2>Class Diagram</h2>
+    <div class="mermaid">
+        classDiagram
+        Animal <|-- Duck
+        Animal <|-- Fish
+        Animal <|-- Zebra
+        Animal : +int age
+        Animal : +String gender
+        Animal: +isMammal()
+        Animal: +mate()
+        class Duck{
+          +String beakColor
+          +swim()
+          +quack()
+        }
+        class Fish{
+          -int sizeInFeet
+          -canEat()
+        }
+        class Zebra{
+          +bool is_wild
+          +run()
+        }
+    </div>
+
+    <h2>Sequence Diagram</h2>
+    <div class="mermaid">
+        %%{init: {"theme": "dark"}}%%
+        sequenceDiagram
+        Alice->>John: Hello John, how are you?
+        John-->>Alice: Great!
+        Alice-)John: See you later!
+    </div>
+
+    <h2>State Diagram</h2>
+    <div class="mermaid">
+        stateDiagram-v2
+        [*] --> Still
+        Still --> [*]
+        Still --> Moving
+        Moving --> Still
+        Moving --> Crash
+        Crash --> [*]
+    </div>
+
+    <h2>Entity Relationship Diagram</h2>
+    <div class="mermaid">
+        erDiagram
+        CUSTOMER ||--o{ ORDER : places
+        ORDER ||--|{ LINE-ITEM : contains
+        CUSTOMER {
+          string name
+          string custNumber
+          string sector
+        }
+        ORDER {
+          int orderNumber
+          string deliveryAddress
+        }
+        LINE-ITEM {
+          string productCode
+          int quantity
+          float pricePerUnit
+        }
+    </div>
+
+    <h2>Gantt Chart</h2>
+    <div class="mermaid">
+        gantt
+        dateFormat  YYYY-MM-DD
+        title Adding GANTT diagram functionality to mermaid
+        section A section
+        Completed task            :done,    des1, 2014-01-06,2014-01-08
+        Active task               :active,  des2, 2014-01-09, 3d
+        Future task               :         des3, after des2, 5d
+        Future task2              :         des4, after des3, 5d
+    </div>
+
+    <h2>Pie Chart</h2>
+    <div class="mermaid">
+        %%{init: {"theme": "forest"}}%%
+        pie
+        title Key elements in Product X
+        "Calcium" : 42
+        "Potassium" : 56
+        "Magnesium" : 10
+    </div>
+
+    <h2>XY Chart</h2>
+    <div class="mermaid">
+        %%{init: {"theme": "dark"}}%%
+        xychart-beta
+        title "Sales Revenue"
+        x-axis [jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec]
+        y-axis "Revenue (in $)" 4000 --> 11000
+        bar [5000, 6000, 7500, 8200, 9500, 10500, 11000, 10200, 9200, 8500, 7000, 6000]
+        line [5000, 6000, 7500, 8200, 9500, 10500, 11000, 10200, 9200, 8500, 7000, 6000]
+    </div>
+
+</body>
+</html></div></script>
