@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍀 幸运图片选号器</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:"Microsoft YaHei",sans-serif;
+}
+
+body{
+    background:#fff8e1;
+    color:#333;
+    padding:20px;
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+}
+
+.card{
+    background:white;
+    border-radius:12px;
+    padding:20px;
+    margin-bottom:20px;
+    box-shadow:0 2px 10px rgba(0,0,0,.1);
+}
+
+h1{
+    text-align:center;
+    color:#d4af37;
+    margin-bottom:20px;
+}
+
+h2{
+    margin-bottom:15px;
+    color:#444;
+}
+
+label{
+    display:block;
+    margin-top:12px;
+    font-weight:bold;
+}
+
+input,
+select{
+    width:100%;
+    padding:10px;
+    margin-top:5px;
+    border:1px solid #ccc;
+    border-radius:6px;
+}
+
+button{
+    border:none;
+    padding:12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:16px;
+}
+
+.btn-group{
+    display:flex;
+    gap:10px;
+    margin-top:15px;
+}
+
+.btn-generate{
+    flex:1;
+    background:#d4af37;
+    color:white;
+}
+
+.btn-reset{
+    flex:1;
+    background:#d9534f;
+    color:white;
+}
+
+.preview{
+    text-align:center;
+}
+
+.preview img{
+    max-width:100%;
+    max-height:320px;
+    border-radius:10px;
+}
+
+.color-grid{
+    display:grid;
+    grid-template-columns:
+        repeat(auto-fill,minmax(220px,1fr));
+    gap:10px;
+}
+
+.color-item{
+    display:flex;
+    align-items:center;
+    padding:8px;
+    border:1px solid #ddd;
+    border-radius:8px;
+}
+
+.swatch{
+    width:40px;
+    height:40px;
+    border:1px solid #999;
+    border-radius:6px;
+    margin-right:10px;
+}
+
+.result-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.ball{
+    width:58px;
+    height:58px;
+    background:#d4af37;
+    color:white;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+    font-size:18px;
+}
+
+.number-grid{
+    display:grid;
+    grid-template-columns:
+        repeat(auto-fill,minmax(110px,1fr));
+    gap:10px;
+}
+
+.number-card{
+    background:#2c3e50;
+    color:white;
+    text-align:center;
+    border-radius:8px;
+    padding:14px;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.hidden{
+    display:none;
+}
+
+@media(max-width:600px){
+
+    .btn-group{
+        flex-direction:column;
+    }
+
+    .ball{
+        width:50px;
+        height:50px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<h1>🍀 幸运图片选号器</h1>
+
+<label>幸运图片</label>
+<input
+    type="file"
+    id="imageInput"
+    accept="image/*">
+
+<label>幸运日期</label>
+<input
+    type="date"
+    id="dateInput">
+
+<label>彩种</label>
+<select
+    id="gameType"
+    onchange="onGameChanged()">
+
+    <option value="life" selected>
+        Magnum Life
+    </option>
+
+    <option value="supreme">
+        Toto Supreme
+    </option>
+
+    <option value="power">
+        Toto Power
+    </option>
+
+    <option value="star">
+        Toto Star
+    </option>
+
+    <option value="lotto7">
+        Japan Lotto 7
+    </option>
+
+    <option value="lotto6">
+        Japan Lotto 6
+    </option>
+
+    <option value="4d">
+        4D
+    </option>
+
+    <option value="3d">
+        3D
+    </option>
+
+    <option value="custom">
+        Custom
+    </option>
+
+</select>
+
+<div
+    id="customArea"
+    class="hidden">
+
+    <label>号码数量</label>
+    <input
+        type="number"
+        id="customCount"
+        min="1"
+        value="6">
+
+    <label>最大号码</label>
+    <input
+        type="number"
+        id="customMax"
+        min="2"
+        value="58">
+
+</div>
+
+<div class="btn-group">
+
+<button
+    class="btn-generate"
+    onclick="generate()">
+    生成号码
+</button>
+
+<button
+    class="btn-reset"
+    onclick="resetAll()">
+    重置
+</button>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>图片预览</h2>
+
+<div class="preview">
+    <img id="previewImg">
+</div>
+
+</div>
+
+<div
+    id="colorCard"
+    class="card hidden">
+
+<h2>主导颜色</h2>
+
+<div
+    id="colorList"
+    class="color-grid">
+</div>
+
+</div>
+
+<div
+    id="resultCard"
+    class="card hidden">
+
+<h2 id="resultTitle">
+生成结果
+</h2>
+
+<div
+    id="resultArea">
+</div>
+
+</div>
+
+<canvas
+    id="canvas"
+    style="display:none">
+</canvas>
+<script>
+
+const MAX_COLORS = 100;
+
+const GAME_CONFIG = {
+    lotto7 : { name:"Japan Lotto 7", count:7, max:37 },
+    lotto6 : { name:"Japan Lotto 6", count:6, max:43 },
+    supreme: { name:"Toto Supreme", count:6, max:58 },
+    power  : { name:"Toto Power", count:6, max:55 },
+    star   : { name:"Toto Star", count:6, max:50 },
+    life   : { name:"Magnum Life", count:8, max:36 }
+};
+
+document.getElementById("dateInput").value =
+    new Date().toISOString().split("T")[0];
+
+document
+    .getElementById("imageInput")
+    .addEventListener("change", function(e){
+
+    const file = e.target.files[0];
+
+    if(!file) return;
+
+    document
+        .getElementById("previewImg")
+        .src = URL.createObjectURL(file);
+});
+
+function onGameChanged(){
+
+    const isCustom =
+        document.getElementById("gameType")
+        .value === "custom";
+
+    document
+        .getElementById("customArea")
+        .classList
+        .toggle("hidden", !isCustom);
+}
+
+function getDateOffset(){
+
+    const txt =
+        document
+        .getElementById("dateInput")
+        .value;
+
+    return txt
+        .replaceAll("-","")
+        .split("")
+        .reduce(
+            (sum,v)=>
+                sum + Number(v),
+            0
+        );
+}
+
+function normalizeColor(v, offset){
+
+    return v === 0
+        ? offset
+        : v;
+}
+
+function quantize(v){
+
+    return Math.floor(v / 16) * 16;
+}
+
+function getCurrentConfig(){
+
+    const game =
+        document
+        .getElementById("gameType")
+        .value;
+
+    if(game !== "custom"){
+        return GAME_CONFIG[game];
+    }
+
+    let count =
+        parseInt(
+            document.getElementById(
+                "customCount"
+            ).value
+        ) || 6;
+
+    let max =
+        parseInt(
+            document.getElementById(
+                "customMax"
+            ).value
+        ) || 58;
+
+    count = Math.min(count, max);
+
+    return {
+        name:"Custom",
+        count:count,
+        max:max
+    };
+}
+
+function generate(){
+
+    const file =
+        document
+        .getElementById("imageInput")
+        .files[0];
+
+    if(!file){
+
+        alert("请先选择图片");
+
+        return;
+    }
+
+    const img = new Image();
+
+    img.onload = function(){
+
+        analyzeImage(img);
+    };
+
+    img.src =
+        URL.createObjectURL(file);
+}
+
+function analyzeImage(img){
+
+    const canvas =
+        document
+        .getElementById("canvas");
+
+    const ctx =
+        canvas
+        .getContext("2d");
+
+    canvas.width = 300;
+    canvas.height = 300;
+
+    ctx.drawImage(
+        img,
+        0,
+        0,
+        300,
+        300
+    );
+
+    const data =
+        ctx
+        .getImageData(
+            0,
+            0,
+            300,
+            300
+        )
+        .data;
+
+    const colorMap = {};
+
+    for(
+        let i=0;
+        i<data.length;
+        i+=4
+    ){
+
+        const r =
+            quantize(data[i]);
+
+        const g =
+            quantize(data[i+1]);
+
+        const b =
+            quantize(data[i+2]);
+
+        const key =
+            `${r},${g},${b}`;
+
+        colorMap[key] =
+            (colorMap[key] || 0)
+            + 1;
+    }
+
+    const colorList =
+        Object
+        .entries(colorMap)
+        .sort(
+            (a,b)=>
+                b[1]-a[1]
+        )
+        .slice(
+            0,
+            MAX_COLORS
+        );
+
+    showColors(colorList);
+
+    const game =
+        document
+        .getElementById("gameType")
+        .value;
+
+    if(game === "4d"){
+
+        generate4D(colorList);
+    }
+    else if(game === "3d"){
+
+        generate3D(colorList);
+    }
+    else{
+
+        generateLotto(colorList);
+    }
+}
+
+function showColors(colorList){
+
+    document
+        .getElementById("colorCard")
+        .classList
+        .remove("hidden");
+
+    const totalPixels =
+        300 * 300;
+
+    let html = "";
+
+    colorList.forEach(c=>{
+
+        const rgb =
+            c[0];
+
+        const count =
+            c[1];
+
+        const percent =
+            (
+                count
+                /
+                totalPixels
+                *
+                100
+            )
+            .toFixed(2);
+
+        html += `
+        <div class="color-item">
+
+            <div
+                class="swatch"
+                style="
+                background:
+                rgb(${rgb})
+                ">
+            </div>
+
+            <div>
+                RGB(${rgb})
+                <br>
+                ${percent}%
+            </div>
+
+        </div>`;
+    });
+
+    document
+        .getElementById("colorList")
+        .innerHTML = html;
+}
+
+function colorToLotteryNumber(
+    r,
+    g,
+    b,
+    max
+){
+
+    return (
+        (
+            r *
+            g *
+            b
+        )
+        %
+        max
+    ) + 1;
+}
+
+function generateLotto(colorList){
+
+    const cfg =
+        getCurrentConfig();
+
+    const offset =
+        getDateOffset();
+
+    const numbers = [];
+
+    const used =
+        new Set();
+
+    for(
+        const item
+        of colorList
+    ){
+
+        let [
+            r,
+            g,
+            b
+        ] =
+        item[0]
+        .split(",")
+        .map(Number);
+
+        r =
+            normalizeColor(
+                r,
+                offset
+            );
+
+        g =
+            normalizeColor(
+                g,
+                offset
+            );
+
+        b =
+            normalizeColor(
+                b,
+                offset
+            );
+
+        let value =
+            colorToLotteryNumber(
+                r,
+                g,
+                b,
+                cfg.max
+            );
+
+        while(
+            used.has(value)
+        ){
+
+            value =
+                (
+                    value
+                    %
+                    cfg.max
+                ) + 1;
+
+            if(
+                used.size
+                >=
+                cfg.max
+            ){
+                break;
+            }
+        }
+
+        if(
+            !used.has(value)
+        ){
+
+            used.add(value);
+
+            numbers.push(value);
+        }
+
+        if(
+            numbers.length
+            >=
+            cfg.count
+        ){
+            break;
+        }
+    }
+
+    numbers.sort(
+        (a,b)=>
+            a-b
+    );
+
+    let html =
+        '<div class="result-row">';
+
+    numbers.forEach(n=>{
+
+        html += `
+        <div class="ball">
+            ${String(n)
+                .padStart(
+                    2,
+                    '0'
+                )}
+        </div>`;
+    });
+
+    html += '</div>';
+
+    document
+        .getElementById(
+            "resultCard"
+        )
+        .classList
+        .remove("hidden");
+
+    document
+        .getElementById(
+            "resultTitle"
+        )
+        .innerText =
+        cfg.name
+        + " 推荐号码";
+
+    document
+        .getElementById(
+            "resultArea"
+        )
+        .innerHTML =
+        html;
+}
+
+function generate4D(colorList){
+
+    const offset =
+        getDateOffset();
+
+    let html =
+        '<div class="number-grid">';
+
+    colorList
+    .slice(
+        0,
+        10
+    )
+    .forEach(item=>{
+
+        let [
+            r,
+            g,
+            b
+        ] =
+        item[0]
+        .split(",")
+        .map(Number);
+
+        r =
+            normalizeColor(
+                r,
+                offset
+            );
+
+        g =
+            normalizeColor(
+                g,
+                offset
+            );
+
+        b =
+            normalizeColor(
+                b,
+                offset
+            );
+
+        const value =
+            (
+                (
+                    r
+                    *
+                    10000
+                )
+                +
+                (
+                    g
+                    *
+                    100
+                )
+                +
+                b
+            )
+            %
+            10000;
+
+        html += `
+        <div class="number-card">
+            ${String(value)
+                .padStart(
+                    4,
+                    '0'
+                )}
+        </div>`;
+    });
+
+    html += '</div>';
+
+    document
+        .getElementById(
+            "resultCard"
+        )
+        .classList
+        .remove("hidden");
+
+    document
+        .getElementById(
+            "resultTitle"
+        )
+        .innerText =
+        "4D 推荐号码";
+
+    document
+        .getElementById(
+            "resultArea"
+        )
+        .innerHTML =
+        html;
+}
+
+function generate3D(colorList){
+
+    const offset =
+        getDateOffset();
+
+    let html =
+        '<div class="number-grid">';
+
+    colorList
+    .slice(
+        0,
+        10
+    )
+    .forEach(item=>{
+
+        let [
+            r,
+            g,
+            b
+        ] =
+        item[0]
+        .split(",")
+        .map(Number);
+
+        r =
+            normalizeColor(
+                r,
+                offset
+            );
+
+        g =
+            normalizeColor(
+                g,
+                offset
+            );
+
+        b =
+            normalizeColor(
+                b,
+                offset
+            );
+
+        const value =
+            (
+                (
+                    r
+                    *
+                    10000
+                )
+                +
+                (
+                    g
+                    *
+                    100
+                )
+                +
+                b
+            )
+            %
+            1000;
+
+        html += `
+        <div class="number-card">
+            ${String(value)
+                .padStart(
+                    3,
+                    '0'
+                )}
+        </div>`;
+    });
+
+    html += '</div>';
+
+    document
+        .getElementById(
+            "resultCard"
+        )
+        .classList
+        .remove("hidden");
+
+    document
+        .getElementById(
+            "resultTitle"
+        )
+        .innerText =
+        "3D 推荐号码";
+
+    document
+        .getElementById(
+            "resultArea"
+        )
+        .innerHTML =
+        html;
+}
+
+function resetAll(){
+
+    document
+        .getElementById(
+            "imageInput"
+        )
+        .value = "";
+
+    document
+        .getElementById(
+            "previewImg"
+        )
+        .src = "";
+
+    document
+        .getElementById(
+            "resultArea"
+        )
+        .innerHTML = "";
+
+    document
+        .getElementById(
+            "colorList"
+        )
+        .innerHTML = "";
+
+    document
+        .getElementById(
+            "resultCard"
+        )
+        .classList
+        .add("hidden");
+
+    document
+        .getElementById(
+            "colorCard"
+        )
+        .classList
+        .add("hidden");
+
+    document
+        .getElementById(
+            "gameType"
+        )
+        .value = "life";
+
+    document
+        .getElementById(
+            "customArea"
+        )
+        .classList
+        .add("hidden");
+
+    document
+        .getElementById(
+            "dateInput"
+        )
+        .value =
+        new Date()
+        .toISOString()
+        .split("T")[0];
+}
+
+</script>
+
+</div>
+</body>
+</html>
