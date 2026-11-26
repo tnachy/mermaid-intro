@@ -94,27 +94,44 @@ button{
     border-radius:10px;
 }
 
-.color-grid{
-    display:grid;
-    grid-template-columns:
-        repeat(auto-fill,minmax(220px,1fr));
+/* Compact M x N Pixel Grid for Dominant Colors */
+.color-wrapper{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
     gap:10px;
 }
 
-.color-item{
-    display:flex;
-    align-items:center;
-    padding:8px;
-    border:1px solid #ddd;
-    border-radius:8px;
+.color-grid{
+    display:grid;
+    grid-template-columns:repeat(10, 14px);
+    gap:1px;
+    background:#ccc;
+    border:1px solid #ccc;
+    padding:1px;
+    border-radius:4px;
 }
 
 .swatch{
-    width:40px;
-    height:40px;
-    border:1px solid #999;
+    width:14px;
+    height:14px;
+    cursor:pointer;
+    transition:transform 0.1s ease;
+}
+
+.swatch:hover{
+    transform:scale(1.4);
+    outline:1px solid #333;
+    z-index:2;
+}
+
+.color-tooltip{
+    font-size:13px;
+    color:#555;
+    background:#f9f9f9;
+    padding:6px 10px;
     border-radius:6px;
-    margin-right:10px;
+    border:1px solid #eee;
 }
 
 .result-row{
@@ -271,29 +288,7 @@ button{
 
 </div>
 
-<div class="card">
-
-<h2>图片预览</h2>
-
-<div class="preview">
-    <img id="previewImg">
-</div>
-
-</div>
-
-<div
-    id="colorCard"
-    class="card hidden">
-
-<h2>主导颜色</h2>
-
-<div
-    id="colorList"
-    class="color-grid">
-</div>
-
-</div>
-
+<!-- Moved Result Card above Color Card for immediate visibility -->
 <div
     id="resultCard"
     class="card hidden">
@@ -304,6 +299,34 @@ button{
 
 <div
     id="resultArea">
+</div>
+
+</div>
+
+<div
+    id="colorCard"
+    class="card hidden">
+
+<h2>主导颜色 (前100色)</h2>
+
+<div class="color-wrapper">
+    <div
+        id="colorList"
+        class="color-grid">
+    </div>
+    <div id="colorInfo" class="color-tooltip">
+        点击或悬停色块查看 RGB 数值
+    </div>
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>图片预览</h2>
+
+<div class="preview">
+    <img id="previewImg">
 </div>
 
 </div>
@@ -542,7 +565,7 @@ function showColors(colorList){
 
     let html = "";
 
-    colorList.forEach(c=>{
+    colorList.forEach((c, idx)=>{
 
         const rgb =
             c[0];
@@ -560,29 +583,30 @@ function showColors(colorList){
             )
             .toFixed(2);
 
+        const label = `#${idx + 1} | RGB(${rgb}) — ${percent}%`;
+
         html += `
-        <div class="color-item">
-
-            <div
-                class="swatch"
-                style="
-                background:
-                rgb(${rgb})
-                ">
-            </div>
-
-            <div>
-                RGB(${rgb})
-                <br>
-                ${percent}%
-            </div>
-
+        <div
+            class="swatch"
+            title="${label}"
+            onmouseenter="updateColorInfo('${label}')"
+            onclick="updateColorInfo('${label}')"
+            style="background:rgb(${rgb})">
         </div>`;
     });
 
     document
         .getElementById("colorList")
         .innerHTML = html;
+
+    if(colorList.length > 0){
+        const topPct = ((colorList[0][1] / totalPixels) * 100).toFixed(2);
+        updateColorInfo(`#1 | RGB(${colorList[0][0]}) — ${topPct}%`);
+    }
+}
+
+function updateColorInfo(text){
+    document.getElementById("colorInfo").innerText = text;
 }
 
 function colorToLotteryNumber(
@@ -744,15 +768,12 @@ function generate4D(colorList){
     const offset =
         getDateOffset();
 
+    const used = new Set();
     let html =
         '<div class="number-grid">';
 
-    colorList
-    .slice(
-        0,
-        10
-    )
-    .forEach(item=>{
+    for(const item of colorList){
+        if(used.size >= 3) break;
 
         let [
             r,
@@ -800,15 +821,15 @@ function generate4D(colorList){
             %
             10000;
 
+        const formatted = String(value).padStart(4, '0');
+        if(used.has(formatted)) continue;
+        used.add(formatted);
+
         html += `
         <div class="number-card">
-            ${String(value)
-                .padStart(
-                    4,
-                    '0'
-                )}
+            ${formatted}
         </div>`;
-    });
+    }
 
     html += '</div>';
 
